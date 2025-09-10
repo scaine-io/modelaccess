@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Oxanium:wght@300;400;600;700;800&display=swap');
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+
+        :root {
+            --primary-teal:#537780; --primary-teal-light:#69939D; --primary-teal-dark:#3F5A61;
+            --bg-dark:#0a0e12; --bg-darker:#060809; --bg-card:#0f1419; --bg-hover:#1a2128;
+            --text-primary:#ffffff; --text-secondary:#a8b8c0; --text-dim:#6b7a82;
+            --accent-glow:rgba(83,119,128,0.4); --success:#00ff88; --warning:#ffaa00; --error:#ff4466;
+            --border-subtle:rgba(83,119,128,0.2); --shadow-glow:0 0 30px rgba(83,119,128,0.3);
+        }
+
+        body{
+            font-family:'Oxanium',monospace;
+            background:linear-gradient(135deg,var(--bg-darker) 0%,var(--bg-dark) 50%,#0d1215 100%);
+            color:var(--text-primary); font-size:16px; line-height:1.6; min-height:100vh; position:relative; overflow-x:hidden;
+        }
+        body::before{
+            content:''; position:fixed; inset:0;
+            background:
+                    radial-gradient(circle at 20% 50%, rgba(83,119,128,.1) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 80%, rgba(83,119,128,.05) 0%, transparent 50%),
+                    radial-gradient(circle at 40% 20%, rgba(83,119,128,.08) 0%, transparent 40%);
+            pointer-events:none; z-index:1;
+        }
+        .draggable{ position:relative; z-index:2; animation:fadeIn .6s ease-out; }
+        @keyframes fadeIn{ from{opacity:0; transform:translateY(20px)} to{opacity:1; transform:translateY(0)} }
+
+        /* Header */
+        h2{
+            background:linear-gradient(135deg,var(--primary-teal-light),var(--primary-teal));
+            background-clip:text; -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+            font-size:2.5em; font-weight:800; letter-spacing:-.5px; margin-bottom:30px; text-transform:uppercase; position:relative; padding-left:20px;
+        }
+        h2::before{
+            content:''; position:absolute; left:0; top:50%; transform:translateY(-50%);
+            width:4px; height:80%; background:linear-gradient(180deg,transparent,var(--primary-teal),transparent); border-radius:2px; animation:pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+        /* Card */
+        .top{
+            padding:40px; background:rgba(15,20,25,.6); backdrop-filter:blur(10px);
+            border:1px solid var(--border-subtle); border-radius:20px; margin:20px;
+            box-shadow:0 10px 40px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.05);
+        }
+
+        /* Label / control pair */
+        .left{
+            display:inline-block; width:200px; margin-bottom:20px; vertical-align:top;
+            color:var(--text-secondary); font-weight:600; font-size:.9em; text-transform:uppercase; letter-spacing:.5px; padding-top:12px; position:relative;
+        }
+        .left::after{ content:':'; position:absolute; right:10px; color:var(--primary-teal); opacity:.6; }
+        .right{ display:inline-block; width:calc(100% - 220px); margin-bottom:20px; padding-right:2%; }
+
+        /* Inputs */
+        input[type="text"], input[type="number"], textarea, select{
+            width:100%; padding:14px 18px;
+            background:linear-gradient(135deg, rgba(6,8,9,.8) 0%, rgba(15,20,25,.8) 100%);
+            border:2px solid var(--border-subtle); border-radius:12px; color:var(--text-primary);
+            font-family:'Oxanium',monospace; font-size:.95em; transition:all .3s cubic-bezier(.4,0,.2,1); backdrop-filter:blur(5px);
+        }
+        input[type="text"]:hover, input[type="number"]:hover, textarea:hover, select:hover{
+            border-color:rgba(83,119,128,.4); background:linear-gradient(135deg, rgba(6,8,9,.9) 0%, rgba(20,28,35,.9) 100%);
+        }
+        input[type="text"]:focus, input[type="number"]:focus, textarea:focus, select:focus{
+            outline:none; border-color:var(--primary-teal); background:rgba(15,20,25,.95);
+            box-shadow:0 0 0 3px rgba(83,119,128,.1), 0 0 20px rgba(83,119,128,.2), inset 0 1px 0 rgba(255,255,255,.05);
+            transform:translateY(-1px);
+        }
+        textarea{ min-height:100px; resize:vertical; line-height:1.5; }
+        select{ cursor:pointer; padding-right:40px; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2369939D' d='M6 9L1 4h10z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 15px center; appearance:none; }
+        select option{ background:var(--bg-card); color:var(--text-primary); padding:10px; }
+
+        /* File input */
+        input[type="file"]{ width:100%; padding:12px; background:transparent; border:2px dashed rgba(83,119,128,.3); border-radius:12px; color:var(--text-secondary); cursor:pointer; transition:all .3s ease; }
+        input[type="file"]:hover{ border-color:var(--primary-teal); background:rgba(83,119,128,.05); }
+        input::file-selector-button{
+            padding:8px 16px; margin-right:15px; background:linear-gradient(135deg,var(--primary-teal),var(--primary-teal-dark));
+            color:#fff; border:none; border-radius:8px; font-family:'Oxanium',monospace; font-weight:600; font-size:.9em; cursor:pointer; transition:all .3s ease; text-transform:uppercase; letter-spacing:.5px;
+        }
+        input::file-selector-button:hover{ background:linear-gradient(135deg,var(--primary-teal-light),var(--primary-teal)); transform:translateY(-1px); box-shadow:0 4px 12px rgba(83,119,128,.3); }
+
+        /* Buttons */
+        button{
+            background:linear-gradient(135deg,var(--primary-teal),var(--primary-teal-dark)); color:#fff;
+            padding:16px 40px; border:none; border-radius:12px; font-family:'Oxanium',monospace; font-size:1.1em; font-weight:700;
+            cursor:pointer; text-transform:uppercase; letter-spacing:1px; transition:all .3s cubic-bezier(.4,0,.2,1); position:relative; overflow:hidden;
+            box-shadow:0 4px 15px rgba(83,119,128,.3), inset 0 1px 0 rgba(255,255,255,.1); margin:10px 5px;
+        }
+        button::before{ content:''; position:absolute; top:0; left:-100%; width:100%; height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent); transition:left .5s ease; }
+        button:hover{ background:linear-gradient(135deg,var(--primary-teal-light),var(--primary-teal)); transform:translateY(-2px) scale(1.02); box-shadow:0 8px 25px rgba(83,119,128,.4), 0 0 40px rgba(83,119,128,.2), inset 0 1px 0 rgba(255,255,255,.2) }
+        button:hover::before{ left:100% }
+        button:active{ transform:translateY(0) scale(1); box-shadow:0 2px 10px rgba(83,119,128,.3), inset 0 1px 0 rgba(255,255,255,.1) }
+
+        /* Tooltip */
+        .infolink:after{
+            content:'?'; display:inline-block; font-family:'Oxanium',monospace; font-weight:bold; text-align:center; font-size:.75em; line-height:1.2em; width:1.2em; height:1.2em; border-radius:50%;
+            margin-left:8px; color:var(--primary-teal); border:2px solid var(--primary-teal); background:rgba(83,119,128,.1); cursor:help; transition:all .3s ease;
+        }
+        .infolink:hover:after{ background:var(--primary-teal); color:#fff; transform:scale(1.1); box-shadow:0 0 15px rgba(83,119,128,.5); }
+        .hide{ display:none; position:absolute; background:var(--bg-card); border:1px solid var(--primary-teal); border-radius:8px; padding:12px; margin-top:5px; font-size:.9em; color:var(--text-secondary); box-shadow:0 10px 30px rgba(0,0,0,.5); z-index:1000; max-width:300px; backdrop-filter:blur(10px); }
+        .infolink:hover + .hide{ display:block; animation:tooltipFade .3s ease; }
+        @keyframes tooltipFade{ from{opacity:0; transform:translateY(-10px)} to{opacity:1; transform:translateY(0)} }
+
+        /* Timeline */
+        .bottom{
+            background:linear-gradient(135deg, rgba(15,20,25,.9) 0%, rgba(6,8,9,.9) 100%);
+            border:1px solid var(--border-subtle); border-radius:20px; padding:30px; margin:20px; min-height:200px;
+            box-shadow:0 10px 40px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.05); backdrop-filter:blur(10px); overflow-x:auto; position:relative;
+        }
+        .bottom::-webkit-scrollbar{ height:8px } .bottom::-webkit-scrollbar-track{ background:rgba(83,119,128,.1); border-radius:4px }
+        .bottom::-webkit-scrollbar-thumb{ background:var(--primary-teal-dark); border-radius:4px } .bottom::-webkit-scrollbar-thumb:hover{ background:var(--primary-teal) }
+        img.shot{ width:auto; height:auto; max-height:150px; max-width:100%; margin-right:20px; border-radius:12px; border:2px solid var(--border-subtle); transition:all .3s cubic-bezier(.4,0,.2,1); box-shadow:0 5px 15px rgba(0,0,0,.3); cursor:pointer; }
+        img.shot:hover{ border-color:var(--primary-teal); transform:scale(1.05) translateY(-5px); box-shadow:0 10px 30px rgba(0,0,0,.5), 0 0 30px rgba(83,119,128,.3) }
+        .draggable{ display:inline-block; position:relative; margin:10px; animation:slideIn .5s ease-out; }
+        @keyframes slideIn{ from{opacity:0; transform:translateX(-30px)} to{opacity:1; transform:translateX(0)} }
+        .bottom-right{ position:absolute; bottom:15px; right:15px; font-weight:700; color:var(--success); background:rgba(0,0,0,.7); padding:6px 12px; border-radius:6px; font-size:.85em; text-transform:uppercase; letter-spacing:.5px; backdrop-filter:blur(10px); border:1px solid rgba(0,255,136,.3); animation:statusPulse 2s ease-in-out infinite; }
+        @keyframes statusPulse{ 0%,100%{opacity:.9; box-shadow:0 0 10px rgba(0,255,136,.3)} 50%{opacity:1; box-shadow:0 0 20px rgba(0,255,136,.5)} }
+
+        /* >>> New desktop layout rules for two-up rows <<< */
+        .row-container{ display:flex; gap:20px; align-items:flex-start; margin:10px 0; }
+        .half-field{ flex:1; min-width:0; }
+        .half-field .left{ width:200px; margin-bottom:0; }
+        .half-field .right{ width:calc(100% - 220px); padding-right:0; margin-bottom:0; }
+
+        /* Responsive */
+        @media (max-width:768px){
+            .left{ width:100%; margin-bottom:10px; }
+            .right{ width:100%; padding-right:0; }
+            h2{ font-size:1.8em } .top{ padding:20px } button{ width:100%; margin:10px 0 }
+            .row-container{ flex-direction:column; gap:0 }
+            .half-field{ width:100% }
+        }
+    </style>
+</head>
+<body>
+<div class="top">
+    <div style="text-align:left;display:inline-block;width:100%;max-width:1400px;">
+        <h2 style="padding-left:0%;">Create Scene</h2>
+
+        <div class="left">Select a Node:</div>
+        <div class="right">
+            <select id="server">
+                <option value="https://gpunode2rsf40d59y58s-1c49b2054b5c4070.tec-s20.onthetaedgecloud.com">https://gpunode2rsf40d59y58s-1c49b2054b5c4070.tec-s20.onthetaedgecloud.com/</option>
+            </select>
+        </div>
+	<div class="left">Select Image:</div>
+        <div class="right"><input type="file" id="imageInput" name="imageInput" accept="image/png, image/jpeg"></div>
+
+        <div class="left">Select A Video:</div>
+        <div class="right"><input type="file" id="imageInput2" name="imageInput"></div>
+
+        <div class="left">Positive Prompt</div>
+        <div class="right"><textarea id="positivePrompt" style="width:100%;min-height:160px;"></textarea></div>
+
+        <div class="left">Negative Prompt</div>
+        <div class="right">
+            <textarea id="negativePrompt" style="width:100%;min-height:102px;">missing limbs, extra limbs, bad anatomy, deformed, disfigured, blurry, low resolution, ugly, noisy, grainy, watermark, text, signature, worst quality, low quality, jpeg artifacts, oversaturated, grayscale, monochrome, fake, surreal, cartoon, anime, 3d render, CGI</textarea>
+        </div>
+
+        <!-- Height + Width -->
+        <div class="row-container">
+            <div class="half-field">
+                <div class="left">Height</div>
+                <div class="right"><input type="text" id="height" value="576"></div>
+            </div>
+            <div class="half-field">
+                <div class="left">Width</div>
+                <div class="right"><input type="text" id="width" value="1024"></div>
+            </div>
+        </div>
+
+        <!-- Steps + Frames -->
+        <div class="row-container">
+            <div class="half-field">
+                <div class="left">Steps</div>
+                <div class="right"><input type="text" id="steps" value="10"></div>
+            </div>
+            <div class="half-field">
+                <div class="left">Frames</div>
+                <div class="right"><input type="text" id="frames" value="81"></div>
+            </div>
+        </div>
+
+        <div class="left">Frame per second</div>
+        <div class="right"><input type="text" id="frameRate" value="13"></div>
+
+        <center><button onclick="upload()" class="glow">Generate Shot</button></center>
+    </div>
+
+    <div style="display:inline:block;float:left;"><img src="./scaine.png" style="width:100px;"></div>
+</div>
+
+<div>
+    <div><h2 style="width:300px;display:inline-block;">Timeline</h2>
+        <div style="float:right; display:inline-block;margin-right:2%;">
+            <!-- icons trimmed for brevity -->
+        </div>
+    </div>
+    <div class="bottom" id="bottom"></div>
+</div>
+
+<script>
+    const SCENE_TYPES = [
+        'N/A',
+        'Advertisement',
+        'Brand Story',
+        'Commercial',
+        'Customer Testimonial',
+        'Documentary Narration',
+        'Farm',
+        'Interview',
+        'Meditation Guide',
+        'Monologue',
+        'News Report',
+        'Outdoor Wilderness',
+        'Podcast Solo',
+        'Press Conference',
+        'Product Demo',
+        'Sales Pitch',
+        'Stand-up Comedy',
+        'Story Time',
+        'TED Talk',
+        'Tutorial',
+        'Vlog',
+        'Custom...'
+    ];
+
+    const SEX_OPTIONS = [
+        'N/A',
+        'Female',
+        'Male'
+    ];
+
+    const ARCHETYPES = [
+        'N/A',
+        'The Activist',
+        'The Adventurer',
+        'The Artist',
+        'The CEO',
+        'The Comedian',
+        'The Critic',
+        'The Entertainer',
+        'The Expert',
+        'The Historian',
+        'The Influencer',
+        'The Motivator',
+        'The News Anchor',
+        'The Philosopher',
+        'The Scientist',
+        'The Storyteller',
+        'The Teacher',
+        'The Therapist',
+        'Custom...'
+    ];
+
+    const PERSONALITIES = [
+        'N/A',
+        'Authoritative',
+        'Calm',
+        'Confident',
+        'Depressed',
+        'Dramatic',
+        'Empathetic',
+        'Energetic',
+        'Enthusiastic',
+        'Flamboyant',
+        'Friendly',
+        'Inspirational',
+        'Mysterious',
+        'Nervous',
+        'Philosophical',
+        'Playful',
+        'Professional',
+        'Quirky',
+        'Sarcastic',
+        'Serious',
+        'Custom...'
+    ];
+
+    const PERSONALITY_MODIFIERS = [
+        'N/A',
+        'Nervous',
+        'Overcaffeinated',
+        'Sleep-Deprived',
+        'Super Excited',
+        'Deeply Focused',
+        'Casually Speaking',
+        'Formally Presenting',
+        'Thinking Out Loud',
+        'Passionate',
+        'Skeptical',
+        'Rushed',
+        'Relaxed',
+        'First Time on Camera',
+        'Veteran Presenter',
+        'Breaking Character',
+        'Fourth Wall Breaking',
+        'Stream of Consciousness',
+        'Custom...'
+    ];
+
+    const SETTING_HINTS = [
+        'N/A',
+        // Professional Settings
+        'Professional Studio',
+        'Corporate Office',
+        'Conference Room',
+        'Board Room',
+        'Home Office',
+        'Co-working Space',
+        'Reception Area',
+        'Executive Suite',
+        // Media/Production
+        'News Studio',
+        'Talk Show Set',
+        'Podcast Studio',
+        'Radio Booth',
+        'Green Screen',
+        'White Cyc Wall',
+        'Black Box Studio',
+        'Broadcast Truck',
+        'Press Room',
+        // Educational
+        'Classroom',
+        'Lecture Hall',
+        'Library',
+        'Laboratory',
+        'Workshop Space',
+        'Art Studio',
+        'Music Room',
+        'Computer Lab',
+        // Home Settings
+        'Living Room',
+        'Kitchen',
+        'Bedroom',
+        'Home Garage',
+        'Basement',
+        'Attic',
+        'Backyard',
+        'Front Porch',
+        // Public Spaces
+        'Coffee Shop',
+        'Restaurant',
+        'Bar/Pub',
+        'Hotel Lobby',
+        'Airport',
+        'Train Station',
+        'Shopping Mall',
+        'Park Bench',
+        'City Street',
+        'Town Square',
+        // Outdoor Locations
+        'Nature Trail',
+        'Beach',
+        'Mountain Top',
+        'Forest',
+        'Desert',
+        'Lakeside',
+        'Rooftop',
+        'Parking Lot',
+        'Sports Field',
+        // Unique Settings
+        'Car Interior',
+        'Airplane Cabin',
+        'Boat Deck',
+        'Warehouse',
+        'Factory Floor',
+        'Hospital Room',
+        'Police Station',
+        'Courtroom',
+        'Church/Temple',
+        'Gym',
+        // Event Spaces
+        'Convention Center',
+        'Wedding Venue',
+        'Concert Hall',
+        'Theater Stage',
+        'Comedy Club',
+        'Art Gallery',
+        'Museum',
+        // Atmospheric
+        'Minimalist Background',
+        'Busy/Chaotic Background',
+        'Moody Lighting',
+        'Natural Light',
+        'Neon-lit',
+        'Candlelit',
+        'Industrial Setting',
+        'Rustic Setting',
+        'Futuristic Setting',
+        'Vintage Setting',
+        'Abstract Space',
+        'Virtual Background',
+        // Crisis/Field
+        'Disaster Zone',
+        'War Zone',
+        'Crime Scene',
+        'Accident Site',
+        'Emergency Room',
+        'Field Hospital',
+        'Evacuation Center',
+        'Command Center',
+        'Custom...'
+    ];
+
+    const ARCHETYPE_BEHAVIORS = {
+        'N/A': [],
+        'The Expert': [
+            "{subj} speaks in precise, measured phrases, pausing to define terms and cite sources.",
+            "{possAdj} hands illustrate concepts with small, controlled gestures like drawing invisible diagrams."
+        ],
+        'The Entertainer': [
+            "{subj} uses big facial expressions and rhythmic delivery to hold attention.",
+            "{subj} punctuates jokes with a quick shoulder shimmy and intentional beat drops."
+        ],
+        'The Teacher': [
+            "{subj} scaffolds ideas step-by-step, checking for understanding as {subj} goes.",
+            "{possAdj} tone is warm and patient, and {subj} points to imaginary notes on an unseen board."
+        ],
+        'The Storyteller': [
+            "{subj} paints scenes with sensory detail and deliberate pacing, letting silence do some of the work.",
+            "{subj} leans in on pivotal beats, eyebrows lifting as {subj} pulls the audience closer."
+        ],
+        'The News Anchor': [
+            "{subj} keeps a steady cadence and neutral expression, prioritizing clarity over flair.",
+            "{possAdj} posture remains upright with folded hands that occasionally trace a headline."
+        ],
+        'The Influencer': [
+            "{subj} speaks casually with trending phrases and upbeat reassurance.",
+            "{subj} frames {possAdj} face with the hands for emphasis and glances toward an imagined phone screen."
+        ],
+        'The Comedian': [
+            "{subj} builds tension with misdirection, then releases it with punchy tags.",
+            "{subj} uses exaggerated pauses and side-eye to sell the bit."
+        ],
+        'The Motivator': [
+            "{subj} uses rising intonation and call-and-response rhythm to energize.",
+            "{subj} taps {possAdj} chest lightly when sharing personal conviction."
+        ],
+        'The Scientist': [
+            "{subj} references data and controls, preferring cautious language like 'suggests' and 'indicates'.",
+            "{subj} unconsciously aligns pens or props to keep order while speaking."
+        ],
+        'The Artist': [
+            "{subj} reaches for metaphor and texture, describing color, light, and negative space.",
+            "{subj} gestures as if shaping clay in the air."
+        ],
+        'The Philosopher': [
+            "{subj} poses questions back to the audience, exploring definitions before claims.",
+            "{subj} speaks slowly with long contemplative pauses and a soft gaze upward."
+        ],
+        'The Adventurer': [
+            "{subj} recounts moments with vivid risk, grit, and terrain details.",
+            "{subj} leans forward as if feeling the wind return."
+        ],
+        'The Critic': [
+            "{subj} dissects structure and intent with dry wit and sharp comparisons.",
+            "{subj} taps a finger against {possAdj} palm to enumerate points."
+        ],
+        'The Historian': [
+            "{subj} constructs timelines and connects cause to effect with careful sourcing.",
+            "{subj} glances sideways as if reading footnotes in the air."
+        ],
+        'The Therapist': [
+            "{subj} uses gentle validation and reflective listening, naming emotions without judgment.",
+            "{subj} slows {possAdj} breathing and lowers {possAdj} shoulders to model calm."
+        ],
+        'The CEO': [
+            "{subj} speaks in outcomes and trade-offs, making crisp decisions aloud.",
+            "{subj} uses open-palm gestures and brief nods to signal alignment."
+        ],
+        'The Activist': [
+            "{subj} blends facts with urgency, anchoring arguments in lived experience.",
+            "{subj} emphasizes with a firm, open hand rather than a pointed finger."
+        ]
+    };
+
+    const PERSONALITY_BEHAVIORS = {
+        'N/A': [],
+        Professional: [
+            "{subj} maintains even tone and tidy phrasing, avoiding slang.",
+            "{possAdj} attire and posture read polished and intentional."
+        ],
+        Enthusiastic: [
+            "{subj} speaks with bright cadence and frequent upward inflections.",
+            "{subj} smiles often and nods quickly when making a point."
+        ],
+        Calm: [
+            "{subj} chooses measured words and leaves breathable pauses.",
+            "{possAdj} shoulders rest low; {subj} breathes audibly before key lines."
+        ],
+        Energetic: [
+            "{subj} moves while talking, punctuating beats with animated hands.",
+            "{subj} accelerates slightly when excitement peaks."
+        ],
+        Mysterious: [
+            "{subj} withholds details to invite curiosity, using half-smiles and soft volume.",
+            "{subj} lets eye contact wander just past the lens as if tracking a secret."
+        ],
+        Friendly: [
+            "{subj} greets warmly and mirrors the audience's presumed mood.",
+            "{subj} uses inclusive language like 'we' and 'us'."
+        ],
+        Authoritative: [
+            "{subj} states conclusions first, then evidence.",
+            "{subj} holds unbroken eye contact when delivering directives."
+        ],
+        Quirky: [
+            "{subj} sprinkles unexpected analogies and non-sequiturs.",
+            "{subj} tilts {possAdj} head and shrugs mid-thought playfully."
+        ],
+        Serious: [
+            "{subj} trims humor and emphasizes stakes.",
+            "{subj} keeps hands still on moments of gravity."
+        ],
+        Playful: [
+            "{subj} teases ideas before revealing them and riffs lightly with the audience.",
+            "{subj} punctuates beats with quick eyebrow pops."
+        ],
+        Inspirational: [
+            "{subj} ties personal struggle to universal takeaways.",
+            "{subj} softens on the word 'you,' then rises into a call to action."
+        ],
+        Sarcastic: [
+            "{subj} deadpans contrasts and over-enunciates to underline irony.",
+            "{subj} holds a beat after punchlines to let it land."
+        ],
+        Empathetic: [
+            "{subj} names emotions gently and validates with phrases like 'that makes sense.'",
+            "{subj} leans forward slightly and nods slowly."
+        ],
+        Confident: [
+            "{subj} speaks with steady volume and unhurried pace.",
+            "{subj} lets silence stand without filling it."
+        ],
+        Nervous: [
+            "{subj} clears {possAdj} throat softly and resets {possAdj} stance.",
+            "{subj} chuckles at small stumbles, then continues."
+        ],
+        Philosophical: [
+            "{subj} defines terms and returns to them as anchors.",
+            "{subj} traces circles in the air with a fingertip when abstracting."
+        ],
+        Dramatic: [
+            "{subj} embraces contrast—whispers near a reveal, then crescendos.",
+            "{subj} uses theatrical pauses and an intent gaze."
+        ],
+        Depressed: [
+            "{subj} speaks with a flat, monotone delivery and slower pace.",
+            "{possAdj} gaze often drops downward, avoiding direct eye contact.",
+            "{subj} takes long pauses between thoughts, as if gathering energy to continue.",
+            "{possAdj} shoulders slump forward and {subj} occasionally sighs mid-sentence."
+        ]
+    };
+
+    const MODIFIER_BEHAVIORS = {
+        'N/A': [],
+        'Nervous': [
+            "{subj} occasionally bites {possAdj} lip and resets {possAdj} footing.",
+            "{possAdj} hands fidget with a ring or sleeve hem between points."
+        ],
+        Overcaffeinated: [
+            "{subj} talks a touch too fast and gestures in quick bursts.",
+            "{subj} bounces subtly on {possAdj} heels while thinking."
+        ],
+        'Sleep-Deprived': [
+            "{possAdj} eyes are squinty and a bit droopy from fatigue.",
+            "{subj} rubs a temple and blinks longer between sentences."
+        ],
+        'Super Excited': [
+            "{subj} beams with wide eyes and cuts to the heart of points eagerly.",
+            "{subj} claps softly once when an idea clicks."
+        ],
+        'Deeply Focused': [
+            "{subj} locks gaze on a fixed spot and lowers {possAdj} voice.",
+            "{subj} trims filler words, choosing exact phrasing."
+        ],
+        'Casually Speaking': [
+            "{subj} leans back and lets sentences trail off informally.",
+            "{subj} uses colloquialisms and a conversational bounce."
+        ],
+        'Formally Presenting': [
+            "{subj} stands tall, projecting with crisp articulation.",
+            "{subj} signals transitions with numbered phrases."
+        ],
+        'Thinking Out Loud': [
+            "{subj} narrates reasoning steps and admits uncertainty openly.",
+            "{subj} repeats key words as placeholders while exploring."
+        ],
+        Passionate: [
+            "{subj} leans in and speaks with vocal warmth and urgency.",
+            "{subj} places a hand over {possAdj} heart when sharing values."
+        ],
+        Skeptical: [
+            "{subj} raises an eyebrow and tests claims against counterexamples.",
+            "{subj} pauses on 'really?' before conceding a point."
+        ],
+        Rushed: [
+            "{subj} compresses sentences and glances aside as if on a clock.",
+            "{subj} skips minor details to stay on track."
+        ],
+        Relaxed: [
+            "{subj} lets silence breathe and smiles softly between ideas.",
+            "{subj} keeps shoulders loose and movements unforced."
+        ],
+        'First Time on Camera': [
+            "{subj} checks the lens focus reflexively and adjusts posture.",
+            "{subj} laughs off small awkwardness and continues."
+        ],
+        'Veteran Presenter': [
+            "{subj} anticipates audience questions and preemptively addresses them.",
+            "{subj} hits beats with seasoned timing and comfortable pauses."
+        ],
+        'Breaking Character': [
+            "{subj} momentarily drops the persona to comment on the moment.",
+            "{subj} smirks at {refl} before snapping back into role."
+        ],
+        'Fourth Wall Breaking': [
+            "{subj} speaks directly to the audience about the performance itself.",
+            "{subj} invites the viewer to notice the framing of the scene."
+        ],
+        'Stream of Consciousness': [
+            "{subj} lets thoughts spill in unedited sequence, circling back as needed.",
+            "{subj} meanders softly before landing a clear point."
+        ]
+    };
+
+    var sel = document.getElementById('PERSONALITIES');
+    for(var i = 0; i < PERSONALITIES.length; i++) {
+        var opt = document.createElement('option');
+        opt.innerHTML = PERSONALITIES[i];
+        opt.value = PERSONALITIES[i];
+        sel.appendChild(opt);
+    }
+    var sel = document.getElementById('PERSONALITY_MODIFIERS');
+    for(var i = 0; i < PERSONALITY_MODIFIERS.length; i++) {
+        var opt = document.createElement('option');
+        opt.innerHTML = PERSONALITY_MODIFIERS[i];
+        opt.value = PERSONALITY_MODIFIERS[i];
+        sel.appendChild(opt);
+    }
+    var sel = document.getElementById('ARCHETYPES');
+    for(var i = 0; i < ARCHETYPES.length; i++) {
+        var opt = document.createElement('option');
+        opt.innerHTML = ARCHETYPES[i];
+        opt.value = ARCHETYPES[i];
+        sel.appendChild(opt);
+    }
+    var sel = document.getElementById('SEX_OPTIONS');
+    for(var i = 0; i < SEX_OPTIONS.length; i++) {
+        var opt = document.createElement('option');
+        opt.innerHTML = SEX_OPTIONS[i];
+        opt.value = SEX_OPTIONS[i];
+        sel.appendChild(opt);
+    }
+    document.getElementById('SEX_OPTIONS').addEventListener('change', function() {
+        join();
+    });
+    document.getElementById('PERSONALITIES').addEventListener('change', function() {
+        join();
+    });
+    document.getElementById('PERSONALITY_MODIFIERS').addEventListener('change', function() {
+        join();
+    });
+    document.getElementById('ARCHETYPES').addEventListener('change', function() {
+        join();
+    });
+
+    function join(){
+        var sex2 = "They";
+        var sex3 = "Their";
+        var sex = document.getElementById("SEX_OPTIONS").value
+        var pers = document.getElementById("PERSONALITIES").value
+        var per = document.getElementById("PERSONALITY_MODIFIERS").value
+        var arc = document.getElementById("ARCHETYPES").value
+        var prompt = "Animate the character displayed with an archetype of ".concat(arc," with a personality that is ",pers," and is always " ,per,". ");
+        if (sex == "N/A"){sex2 = "They"; sex3 = "Their";}
+        if (sex == "Male"){sex2 = "He"; sex3 = "His";}
+        if (sex == "Female"){sex2 = "She";sex3 = "Her";}
+        for(var i = 0; i < PERSONALITY_BEHAVIORS[pers].length; i++) {
+            prompt = prompt.concat(" ",PERSONALITY_BEHAVIORS[pers][i]);
+        }
+        for(var i = 0; i < MODIFIER_BEHAVIORS[per].length; i++) {
+            prompt = prompt.concat(" ",MODIFIER_BEHAVIORS[per][i]);
+        }
+        for(var i = 0; i < ARCHETYPE_BEHAVIORS[arc].length; i++) {
+            prompt = prompt.concat(" ",ARCHETYPE_BEHAVIORS[arc][i]);
+        }
+        prompt = prompt.replaceAll("{subj}", sex2);
+        prompt = prompt.replaceAll("{possAdj}", sex3);
+        positiveString = prompt.concat(" Render a compelling single-person scene or monologue aligned to the above persona. Keep blocking simple and camera-aware; include occasional beats for breath, gesture, and gaze redirection.");
+
+        document.getElementById("positivePrompt").value = positiveString ;
+    }
+var imageLoc = 0;
+    async function prompt(){
+        var imageInput = document.getElementById("imageInput").files[0].name;
+        var positive = document.getElementById("positivePrompt").value;
+        var negative = document.getElementById("negativePrompt").value;
+        var steps = document.getElementById("steps").value;
+        var height = document.getElementById("height").value;
+        var width = document.getElementById("width").value;
+        var frames = document.getElementById("frames").value;
+        var frameRate = document.getElementById("frameRate").value;
+
+        var image2video = {
+            "3": {
+                "inputs": {
+                    "seed": 971252001519847,
+                    "steps": steps,
+                    "cfg": 1,
+                    "sampler_name": "uni_pc",
+                    "scheduler": "simple",
+                    "denoise": 1,
+                    "model": [
+                        "54",
+                        0
+                    ],
+                    "positive": [
+                        "50",
+                        0
+                    ],
+                    "negative": [
+                        "50",
+                        1
+                    ],
+                    "latent_image": [
+                        "50",
+                        2
+                    ]
+                },
+                "class_type": "KSampler",
+                "_meta": {
+                    "title": "KSampler"
+                }
+            },
+            "6": {
+                "inputs": {
+                    "text": positive,
+                    "clip": [
+                        "38",
+                        0
+                    ]
+                },
+                "class_type": "CLIPTextEncode",
+                "_meta": {
+                    "title": "CLIP Text Encode (Positive Prompt)"
+                }
+            },
+            "7": {
+                "inputs": {
+                    "text": negative,
+                    "clip": [
+                        "38",
+                        0
+                    ]
+                },
+                "class_type": "CLIPTextEncode",
+                "_meta": {
+                    "title": "CLIP Text Encode (Negative Prompt)"
+                }
+            },
+            "8": {
+                "inputs": {
+                    "samples": [
+                        "3",
+                        0
+                    ],
+                    "vae": [
+                        "39",
+                        0
+                    ]
+                },
+                "class_type": "VAEDecode",
+                "_meta": {
+                    "title": "VAE Decode"
+                }
+            },
+            "30": {
+                "inputs": {
+                    "frame_rate": frameRate,
+                    "loop_count": 0,
+                    "filename_prefix": "ScaineVideo",
+                    "format": "video/h264-mp4",
+                    "pingpong": false,
+                    "save_output": true,
+                    "images": [
+                        "8",
+                        0
+                    ]
+                },
+                "class_type": "VHS_VideoCombine",
+                "_meta": {
+                    "title": "Video Combine 🎥🅥🅗🅢"
+                }
+            },
+            "37": {
+                "inputs": {
+                    "unet_name": "wanI2V/wan2114BFusionx_fusionxImage2video.safetensors",
+                    "weight_dtype": "default"
+                },
+                "class_type": "UNETLoader",
+                "_meta": {
+                    "title": "Load Diffusion Model"
+                }
+            },
+            "38": {
+                "inputs": {
+                    "clip_name": "native/umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+                    "type": "wan",
+                    "device": "default"
+                },
+                "class_type": "CLIPLoader",
+                "_meta": {
+                    "title": "Load CLIP"
+                }
+            },
+            "39": {
+                "inputs": {
+                    "vae_name": "nativewan/wan_2.1_vae.safetensors"
+                },
+                "class_type": "VAELoader",
+                "_meta": {
+                    "title": "Load VAE"
+                }
+            },
+            "49": {
+                "inputs": {
+                    "clip_name": "clip_vision_h.safetensors"
+                },
+                "class_type": "CLIPVisionLoader",
+                "_meta": {
+                    "title": "Load CLIP Vision"
+                }
+            },
+            "50": {
+                "inputs": {
+                    "width": width,
+                    "height": height,
+                    "length": frames,
+                    "batch_size": 1,
+                    "positive": [
+                        "6",
+                        0
+                    ],
+                    "negative": [
+                        "7",
+                        0
+                    ],
+                    "vae": [
+                        "39",
+                        0
+                    ],
+                    "clip_vision_output": [
+                        "51",
+                        0
+                    ],
+                    "start_image": [
+                        "52",
+                        0
+                    ]
+                },
+                "class_type": "WanImageToVideo",
+                "_meta": {
+                    "title": "WanImageToVideo"
+                }
+            },
+            "51": {
+                "inputs": {
+                    "crop": "none",
+                    "clip_vision": [
+                        "49",
+                        0
+                    ],
+                    "image": [
+                        "52",
+                        0
+                    ]
+                },
+                "class_type": "CLIPVisionEncode",
+                "_meta": {
+                    "title": "CLIP Vision Encode"
+                }
+            },
+            "52": {
+                "inputs": {
+                    "image": imageInput
+                },
+                "class_type": "LoadImage",
+                "_meta": {
+                    "title": "Load Image"
+                }
+            },
+            "54": {
+                "inputs": {
+                    "shift": 2.0000000000000004,
+                    "model": [
+                        "37",
+                        0
+                    ]
+                },
+                "class_type": "ModelSamplingSD3",
+                "_meta": {
+                    "title": "ModelSamplingSD3"
+                }
+            }
+        };
+
+async function sendComfyUIWorkflow(workflowJson) {
+  var comfyUIApiUrl = document.getElementById("server").value.concat("/prompt");
+
+  try {
+    const response = await fetch(comfyUIApiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        prompt: workflowJson, // The API-formatted workflow JSON goes here
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('Workflow queued successfully:', data);
+    return data;
+  } catch (error) {
+    console.error('Error sending workflow to ComfyUI:', error);
+    throw error;
+  }
+}
+
+sendComfyUIWorkflow(image2video)
+   .then(result => {
+	 console.log('Result:', result);
+	 loadImage("imageInput",result.prompt_id);
+    })
+   .catch(error => console.error('Failed to send workflow:', error));
+}
+
+var imageData;
+async function loadImage(file_location,promptID){
+console.log(file_location);
+imageLoc++;
+  var soundFile = await processRequest();
+  const defaultFile = document.getElementById(file_location);
+  const file = defaultFile.files[0];
+  if (file && file.type.startsWith('image/')) {
+    imageToBase64FileReader(file, (base64String) => {
+      imageData = base64String;
+	document.getElementById("bottom").innerHTML = document.getElementById("bottom").innerHTML.concat("<div class='draggable' draggable='true'><img class='shot' src=",imageData," /><div class='bottom-right' id='status",imageLoc,"'>Processing</div><input type='hidden' id='id",imageLoc,"' value='",promptID,"'><input type='hidden' id='sound",imageLoc,"' value='",soundFile,"'></div><input type='hidden' id='video",imageLoc,"' value=''><input type='hidden' id='soundFinal",imageLoc,"' value=''><input type='hidden' id='active",imageLoc,"' value=''></div>");   
+});
+setTimeout(function(){
+    checkJob(); 
+}, 10000); 
+  } else {
+    console.log('Please select an image file.');
+    document.getElementById(image).style.display = "none";
+  }
+ fetch("http://scaine.io/scaine/api/request/?id=".concat(promptID,"&sound=",soundFile,"&node=",document.getElementById("server").value))
+  .then((response) => response.json())
+  .then((json) => console.log(json));
+console.log("http://scaine.io/scaine/api/request/?id=".concat(promptID,"&sound=",soundFile,"&node=",document.getElementById("server").value));
+
+};
+async function sendJsonToLatent(promptID,loc){
+  var comfyUIApiUrl = latentSync;
+
+latentflowJson = {
+  "41": {
+    "inputs": {
+      "frame_rate": 25,
+      "loop_count": 0,
+      "filename_prefix": "Final",
+      "format": "video/h264-mp4",
+      "pix_fmt": "yuv420p",
+      "crf": 19,
+      "save_metadata": true,
+      "trim_to_audio": false,
+      "pingpong": false,
+      "save_output": true,
+      "images": [
+        "54",
+        0
+      ],
+      "audio": [
+        "54",
+        1
+      ]
+    },
+    "class_type": "VHS_VideoCombine",
+    "_meta": {
+      "title": "Video Combine 🎥🅥🅗🅢"
+    }
+  },
+  "54": {
+    "inputs": {
+      "seed": 1671,
+      "lips_expression": 1.5,
+      "inference_steps": 10,
+      "images": [
+        "55",
+        0
+      ],
+      "audio": [
+        "55",
+        1
+      ]
+    },
+    "class_type": "LatentSyncNode",
+    "_meta": {
+      "title": "LatentSync1.6 Node"
+    }
+  },
+  "55": {
+    "inputs": {
+      "mode": "pingpong",
+      "fps": 25,
+      "silent_padding_sec": 0.5,
+      "images": [
+        "57",
+        0
+      ],
+      "audio": [
+        "86",
+        0
+      ]
+    },
+    "class_type": "VideoLengthAdjuster",
+    "_meta": {
+      "title": "Video Length Adjuster"
+    }
+  },
+  "57": {
+    "inputs": {
+      "video": "http://scaine.io/data/".concat(document.getElementById("video".concat(loc)).value),
+      "force_rate": 0,
+      "custom_width": 0,
+      "custom_height": 0,
+      "frame_load_cap": 0,
+      "skip_first_frames": 0,
+      "select_every_nth": 1,
+      "format": "AnimateDiff"
+    },
+    "class_type": "VHS_LoadVideoPath",
+    "_meta": {
+      "title": "Load Video (Path) 🎥🅥🅗🅢"
+    }
+  },
+  "81": {
+    "inputs": {
+      "url": "http://scaine.io/data/".concat(document.getElementById("soundFinal".concat(loc)).value),
+      "filename_prefix": "TyDev",
+      "save_file": true
+    },
+    "class_type": "TY_UrlDownload",
+    "_meta": {
+      "title": "Url Download"
+    }
+  },
+  "86": {
+    "inputs": {
+      "audio_file": [
+        "81",
+        0
+      ],
+      "seek_seconds": 0,
+      "duration": 0
+    },
+    "class_type": "VHS_LoadAudio",
+    "_meta": {
+      "title": "Load Audio (Path)🎥🅥🅗🅢"
+    }
+  }
+}
+
+  try {
+    const response = await fetch(comfyUIApiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        prompt: latentflowJson, 
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('Workflow queued successfully:', data);
+    return data;
+  } catch (error) {
+    console.error('Error sending workflow to ComfyUI:', error);
+    throw error;
+  }
+}
+
+
+async function checkJob() {
+var counter = 0;
+var restart = 0;
+for (let i = 1; i <= imageLoc; i++) {
+console.log(imageLoc);
+var promptID = document.getElementById("id".concat(i)).value;
+var soundLocation = document.getElementById("soundFinal".concat(i)).value;
+ if (soundLocation == ""){
+  var comfyUIApiUrl = "http://www.scaine.io/scaine/api/check/?id=".concat(promptID);
+  fetch(comfyUIApiUrl)
+    .then(function(serverPromise){ 
+      serverPromise.json()
+        .then(function(j) { 
+	  console.log(j);
+          for (let key in j) {
+		console.log(j);
+		
+        	if (j['soundFile'].length > 6){
+			counter++;
+			document.getElementById("soundFinal".concat(i)).value = j['soundFile'];
+			document.getElementById("video".concat(i)).value = j['movieFile'];
+			if (counter == 1){ sendJsonToLatent(promptID,i); }
+			return;
+		}else{
+			if (restart == 0){setTimeout(checkJob, 20000);restart = 100; }	
+			j = [];
+		}
+		
+   	  }
+        })
+        .catch(function(e){
+          console.log(e);
+	  if (restart == 0){setTimeout(checkJob, 20000);restart = 100; }
+        });
+    })
+    .catch(function(e){
+        console.log(e);
+	if (restart == 0){setTimeout(checkJob, 20000);restart = 100; }
+      });
+}
+}  
+}
+
+function imageToBase64FileReader(file, callback) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    callback(e.target.result); 
+  };
+  reader.readAsDataURL(file);
+}
+
+   async function processRequest() {
+      const apiUrl = "https://ondemand.thetaedgecloud.com/infer_request/kokoro_82m";
+      const apiToken = "mm6q8pcfj4pnnmk1sqqp0mtavk8fk55exch4dzb9hxv9uw2s9y8bri83ab1gjmek";
+      var voice = "am_fenrir";
+        var sex = document.getElementById("SEX_OPTIONS").value
+	if (sex == "N/A"){voice = "am_fenrir";} 
+	if (sex == "Male"){voice = "bm_daniel";} 
+	if (sex == "Female"){voice = "bm_daniel";}
+
+      const inputText = document.getElementById("text2speech").value;
+      try {
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiToken}`
+          },
+          body: JSON.stringify({
+            input: {
+              text: inputText,
+              voice: voice,
+              speed: 1
+            },
+            wait: 1
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+	
+	var outputfile = "https://ondemand-outputs.thetaedgecloud.com/".concat(data['body']['infer_requests'][0]['service_id'],"/",data['body']['infer_requests'][0]['project_id'],"/",data['body']['infer_requests'][0]['id'],"_audio_url.wav");
+        console.log(outputfile);
+	return outputfile;
+      } catch (err) {
+        console.log(err.message);
+      } finally {
+        
+      }
+}
+
+async function upload(){
+  const selectedFile = document.getElementById('imageInput').files[0];
+  if (selectedFile) {
+    try {
+      const uploadResult = await uploadImageToComfyUI(selectedFile);
+      console.log("uploaded file name:");
+      console.log(uploadResult.name);
+    } catch (error) {
+      console.log(error)
+    }
+  }
+prompt();
+}
+
+async function uploadImageToComfyUI(file) {
+  var comfyUIApiUrl = document.getElementById("server").value.concat("/upload/image");
+
+  const formData = new FormData();
+  formData.append('image', file); // 'image' is the expected field name for the image file
+  formData.append('type', 'input'); // Specifies the target folder (e.g., 'input', 'temp', 'output')
+  formData.append('subfolder', ''); // Optional: specify a subfolder within the 'type' folder
+  formData.append('overwrite', 'false'); // Optional: set to 'true' to overwrite existing files
+
+  try {
+    const response = await fetch(comfyUIApiUrl, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log('Image upload successful:', result);
+    return result;
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    throw error;
+  }
+}
+
+  const container = document.getElementById('bottom');
+        let dragged = null;
+
+        container.addEventListener('dragstart', (e) => {
+            if (e.target.classList.contains('draggable')) {
+                dragged = e.target;
+                e.dataTransfer.effectAllowed = 'move';
+            }
+        });
+
+        container.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const target = e.target.closest('.draggable');
+            if (target && target !== dragged) {
+                target.classList.add('drag-over');
+            }
+        });
+
+        container.addEventListener('dragleave', (e) => {
+            const target = e.target.closest('.draggable');
+            if (target) {
+                target.classList.remove('drag-over');
+            }
+        });
+
+        container.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const target = e.target.closest('.draggable');
+            if (target && target !== dragged) {
+                target.classList.remove('drag-over');
+                const children = Array.from(container.children);
+                const draggedIndex = children.indexOf(dragged);
+                const targetIndex = children.indexOf(target);
+                if (draggedIndex < targetIndex) {
+                    container.insertBefore(dragged, target.nextSibling);
+                } else {
+                    container.insertBefore(dragged, target);
+                }
+            }
+        });
+
+        container.addEventListener('dragend', () => {
+            document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            dragged = null;
+        });
+var latentSync = "https://gpunode480gceioknbjf.tec-s30.onthetaedgecloud.com/prompt";
+</script>
+</body>
+</html>
